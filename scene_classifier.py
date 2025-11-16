@@ -6,14 +6,17 @@ class SceneClassifier(torch.nn.Module):
         super().__init__()
 
         self.model = tv.models.resnet50().float()
-        self.loss = torch.nn.CrossEntropyLoss()
+        self.model.fc = torch.nn.Linear(in_features=2048, out_features=6, bias=True)
+        
+        self.criterion = torch.nn.CrossEntropyLoss()
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer,
             T_max=total_epochs # период косинуса (обычно total_epochs)
         )
-        self.softmax = torch.nn.Softmax()
 
+        self.model = self.model.to(self.device)
         self.mode = 'train'
 
     def set_mode(self, mode):
@@ -32,15 +35,39 @@ class SceneClassifier(torch.nn.Module):
         self.mode = 'test'
 
     def forward(self, batch):
-        self.optimizer.zero_grad()
+        if self.mode == 'train':
+            self.optimizer.zero_grad()
 
-        logits = self.model(batch['images'])
-        probs = self.softmax(logits)
+            batch['images'] = batch['images'].to(self.device)
+            batch['labels'] = batch['labels'].to(self.device)
 
-        predicted_labels = torch.argmax(probs, dim=1)
-        true_labels = batch['labels']
+            output = self.model(batch['images'])
+            true_labels = batch['labels']
 
-        loss = self.loss(predicted_labels.float(), torch.tensor(true_labels).float())
-        loss.backward()
+            loss = self.criterion(output.float(), torch.tensor(true_labels).long())
+            loss.backward()
 
-        self.optimizer.step()
+            self.optimizer.step()
+            self.scheduler.step()
+
+            #return f'Текущая точность: {(torch.argmax(output, dim=1) == true_labels).sum().item() / len(true_labels)}'
+            return (torch.argmax(output, dim=1) == true_labels).sum().item() / len(true_labels)
+        elif self.mode == 'test':
+            try:
+                img = batch['images'].to(self.device)
+                labels = batch['labels'].to(self.device)
+
+                logits = self.model(img)
+                probs = self.softmax(logits)
+                predicted_labels = torch.argmax(probs, dim=1)
+
+                accuracy = (predicted_labels == labels).sum().item() / len(labels)
+                return accuracy
+            except BaseException:
+                img = batch
+
+                logits = self.model(img)
+                probs = self.softmax(logits)
+                predicted_labels = torch.argmax(probs, dim=1)
+
+                return predicted_labels
