@@ -19,7 +19,7 @@ def main():
 
     # Создаём экземпляры датасета и модели
     dataset = SceneDataset("/kaggle/input/d/nitishabharathi/scene-classification/train-scene classification/train.csv",
-                        '/kaggle/input/label-blyat/labels.txt',
+                        '/kaggle/input/label/labels.txt',
                         '/kaggle/input/d/nitishabharathi/scene-classification/train-scene classification/train',
                         transform_list)
     model = SceneClassifier(10)
