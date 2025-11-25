@@ -1,10 +1,11 @@
 import argparse
 from collections import Counter
-from dataset import SceneDataset
 from torchvision import transforms
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
+
+from preprocess import SceneDataset
 
 parser = argparse.ArgumentParser(description='Аргументы для визуализации')
 
