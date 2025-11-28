@@ -5,9 +5,11 @@ from tqdm import tqdm
 
 from preprocess import SceneDataset
 from classifier import SceneClassifier
+from splitter import Sample
 
 def model_train(
-    path_train_csv: Path,
+    samples_train: list[Sample],
+    samples_eval: list[Sample],
     path_images: Path,
     labels: dict[int, str],
     transforms,
@@ -15,9 +17,16 @@ def model_train(
     batch_size: int = 256
 ) -> SceneClassifier:
     
-    # Создаём экземпляры датасета и модели
-    dataset = SceneDataset(
-        path_train_csv,
+    # Создаём экземпляры датасетов и модели
+    dataset_train = SceneDataset(
+        samples_train,
+        path_images,
+        labels,
+        transforms
+    )
+    # TODO: Реализовать логику для eval!
+    dataset_eval = SceneDataset(
+        samples_eval,
         path_images,
         labels,
         transforms
@@ -27,23 +36,24 @@ def model_train(
     model.train()
 
     # Формируем из датасета батчи
-    batched_dataset = DataLoader(dataset, batch_size, shuffle=True)
+    batched_dataset_train = DataLoader(dataset_train, batch_size, shuffle=False)
+    batched_dataset_eval = DataLoader(dataset_eval, batch_size, shuffle=False)
 
     for epoch in range(epochs):
         print(f'Эпоха {epoch + 1} / {epochs}...')
         epoch_acc = []
 
-        batched_dataset_with_progress_bar = tqdm(
-            batched_dataset, unit=f'батч по {batch_size}'
+        batched_dataset_train_with_progress_bar = tqdm(
+            batched_dataset_train, unit=f'батч по {batch_size}'
         )
         
         # Проходимся по батчам --
         # вся логика обучения и классификации реализована внутри модели
-        for images, labels in batched_dataset_with_progress_bar:
+        for images, labels in batched_dataset_train_with_progress_bar:
             output = model({'images': images, 'labels': labels})
             epoch_acc.append(output)
 
-            batched_dataset_with_progress_bar.set_postfix(
+            batched_dataset_train_with_progress_bar.set_postfix(
                 Точность=f'{int(output * 100) / 100}'
             )
     

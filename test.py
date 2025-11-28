@@ -5,11 +5,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from preprocess import SceneDataset
+from splitter import Sample
 
 
 def model_test(
     model,
-    path_test_csv: Path,
+    samples_test: list[Sample],
     path_images: Path,
     transforms,
     batch_size: int = 256
@@ -17,11 +18,10 @@ def model_test(
                
     # Создаём экземпляры датасета и модели
     dataset = SceneDataset(
-        path_test_csv,
+        samples_test,
         path_images,
         {}, # В тестовом режиме названия меток не нужны
         transforms,
-        is_test=True
     )
 
     model.test()

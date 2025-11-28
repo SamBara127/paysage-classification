@@ -5,28 +5,27 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 
+from splitter import Sample
+
 class SceneDataset(Dataset):
     def __init__(
             self,
-            path_dataset: Path,
-            path_images: Path,
+            image_samples: list[Sample],
+            images_path: Path,
             labels: dict[int, str],
             transforms: Callable,
-            is_test: bool = False
         ):
 
         self.transforms = transforms
-        self.is_test = is_test
-
-        if self.is_test:
-            self.labels = labels
+        self.images_path = images_path
+        self.labels = labels
 
         # Предобрабатываем изображения
-        self.preprocess_images(path_dataset, path_images)
+        self.preprocess_images(image_samples)
 
-    def load_an_image(self, row, path_images):
+    def load_an_image(self, sample):
         # Соединяем переданную папку с названием файла в датафрейме
-        file_path = f"{path_images}/{row['image_name']}"
+        file_path = f"{self.images_path}/{sample['image_name']}"
 
         with Image.open(file_path) as img:
             img_rgb = img.convert('RGB')
@@ -37,19 +36,14 @@ class SceneDataset(Dataset):
             # Переводим изображение в тензор
             img_tensor = self.transforms(img_array).float()
 
-            return img_tensor if self.is_test else (img_tensor, int(row['label']))
+            return (img_tensor, int(sample['label']))
     
-    def preprocess_images(self, path_dataset, path_images):
-        # Открываем датафрейм с изображениями (создаём тренировочную выборку)
-        path = path_dataset
-        df = pd.read_csv(path)
-
+    def preprocess_images(self, image_samples):
         # Создаём список изображений;
-        # Нам нужен список кортежей. Кортеж - пара тензор-метка
-        img_list = df.apply(
-            lambda row: self.load_an_image(row, path_images),
-            axis=1
-        ).tolist()
+        # Нам нужен список кортежей. Кортеж -- пара тензор-метка
+        img_list = list(map(
+            lambda sample: self.load_an_image(sample),
+        image_samples))
 
         self.__dataset = img_list
 
