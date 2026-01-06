@@ -1,8 +1,9 @@
 from collections import Counter
 from pathlib import Path
-from sklearn.decomposition import PCA
+
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.decomposition import PCA
 
 from preprocess import SceneDataset
 from samples import Sample
@@ -25,9 +26,7 @@ def visualize(
 
     counts = Counter(labels_list)
 
-    print([
-        f'Доля {label}: {cnt / len(labels_list)}' for label, cnt in counts.items()
-    ])
+    print([f'Доля {label}: {cnt / len(labels_list)}' for label, cnt in counts.items()])
 
     images = []
     labels = []
@@ -50,7 +49,7 @@ def visualize(
             label=cls,
             alpha=0.7,
             edgecolors='k',
-            linewidths=0.5
+            linewidths=0.5,
         )
 
     plt.xlabel('PCA-1')

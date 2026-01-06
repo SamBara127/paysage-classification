@@ -1,11 +1,12 @@
+from copy import deepcopy
 from pathlib import Path
+
 import numpy as np
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from copy import deepcopy
 
-from preprocess import SceneDataset
 from classifier import SceneClassifier
+from preprocess import SceneDataset
 from samples import Sample
 
 
@@ -16,21 +17,12 @@ def model_train(
     labels: dict[int, str],
     transforms,
     epochs: int = 20,
-    batch_size: int = 256
+    batch_size: int = 256,
 ) -> SceneClassifier:
-    
     # Создаём экземпляры датасетов и модели
-    dataset_train = SceneDataset(
-        samples_train,
-        path_images,
-        transforms
-    )
+    dataset_train = SceneDataset(samples_train, path_images, transforms)
 
-    dataset_eval = SceneDataset(
-        samples_eval,
-        path_images,
-        transforms
-    )
+    dataset_eval = SceneDataset(samples_eval, path_images, transforms)
 
     model = SceneClassifier(
         epochs,
@@ -43,7 +35,9 @@ def model_train(
     batched_dataset_eval = DataLoader(dataset_eval, batch_size, shuffle=True)
 
     MAX_DEGRADATION_ALLOWED = 10
-    best_acc = 0.0; best_epoch = 0; best_param = None
+    best_acc = 0.0
+    best_epoch = 0
+    best_param = None
     for epoch in range(epochs):
         print(f'Эпоха {epoch + 1} / {epochs}...')
         epoch_acc = []
@@ -51,7 +45,7 @@ def model_train(
         batched_dataset_train_progress = tqdm(
             batched_dataset_train, unit=f' Б по {batch_size}'
         )
-        
+
         # Проходимся по батчам --
         # вся логика обучения и классификации реализована внутри модели
         for images, labels in batched_dataset_train_progress:
