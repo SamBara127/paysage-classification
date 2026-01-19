@@ -33,8 +33,18 @@ from visualize import visualize
     show_default=True,
     help='Кол-во эпох (обучение прервётся, если точность не растёт >10 эпох)',
 )
-@click.option('--bs', default=256, show_default=True, help='Размер батча')
-@click.option('--ss', default=88, show_default=True, help='Размер стороны изображения')
+@click.option(
+    '--bs',
+    default=256,
+    show_default=True,
+    help='Размер батча во время обучения, эвалюации и тренировки',
+)
+@click.option(
+    '--ss',
+    default=88,
+    show_default=True,
+    help='Размер стороны квадрата, к которому будут приведены изображения',
+)
 @click.option(
     '--path-labels',
     default='data/labels.txt',
@@ -67,7 +77,7 @@ def run(
     mode,
     e,
     bs,
-    ss,  # Epochs, BatchSize, SampleSize
+    ss,
     path_labels,
     path_splits,
     path_checkpoint,
@@ -107,12 +117,16 @@ def run(
             create_splits(path_csv, dataset_splits, path_splits)
             [train_samples, eval_samples] = read_splits(['train', 'eval'], path_splits)
 
-        model = model_train(
-            train_samples, eval_samples, path_images, labels, transform_list, e, bs
+        model, best_acc, best_epoch = model_train(
+            train_samples, eval_samples, path_images, labels, transform_list, e, bs, ss
         )
 
         model_date = datetime.now().strftime('%y%m%d')
-        model_name = f'{path_checkpoint}{model_date}-{e}-{bs}-{ss}.pt'
+        model_name = (
+            f'{path_checkpoint}{model_date}_'
+            f'{e}-{bs}-{ss}_'
+            f'{best_epoch}-{best_acc:.4f}.pt'
+        )
 
         torch.save(model, model_name)
         print('Обучение завершено!')

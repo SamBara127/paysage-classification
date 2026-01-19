@@ -2,7 +2,9 @@
 *.pyc
 .mypy_cache/*
 
-models/*
 data/*
 !data/labels.txt # Названия классов по умолчанию
+models/*
 pred/*
+runs/*
+!runs/.gitkeep # Т.к. ненастраиваемый каталог
