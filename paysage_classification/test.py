@@ -4,8 +4,8 @@ from sklearn import metrics
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from preprocess import SceneDataset
-from samples import Sample
+from .dataset.samples import Sample
+from .model.preprocess import SceneDataset
 
 
 def model_test(

@@ -7,9 +7,9 @@ from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision.utils import make_grid
 from tqdm import tqdm
 
-from classifier import SceneClassifier
-from preprocess import SceneDataset
-from samples import Sample
+from .dataset.samples import Sample
+from .model.classifier import SceneClassifier
+from .model.preprocess import SceneDataset
 
 
 def model_train(

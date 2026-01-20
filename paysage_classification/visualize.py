@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
 
-from preprocess import SceneDataset
-from samples import Sample
+from .dataset.samples import Sample
+from .model.preprocess import SceneDataset
 
 
 # Перед использованием задать ss не больше 64, иначе крашнется!
