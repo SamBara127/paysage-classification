@@ -1,18 +1,22 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from test import model_test, show_metrics
 
 import hydra
-import kagglehub
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torchvision import transforms
 
-from inference import inference
-from samples import create_splits, read_samples, read_splits
-from train import model_train
-from visualize import visualize
+from paysage_classification.dataset.downloader import check_dataset, download_dataset
+from paysage_classification.dataset.samples import (
+    create_splits,
+    read_samples,
+    read_splits,
+)
+from paysage_classification.inference import inference
+from paysage_classification.test import model_test, show_metrics
+from paysage_classification.train import model_train
+from paysage_classification.visualize import visualize
 
 log = logging.getLogger(__name__)
 
@@ -26,20 +30,23 @@ def model_name_format(path_checkpoint, e, bs, ss, best_epoch, best_acc) -> str:
     )
 
 
-@hydra.main(version_base=None, config_path='config', config_name='config')
+@hydra.main(version_base=None, config_path='', config_name='config')
 def run(cfg: DictConfig):
     params = OmegaConf.to_container(cfg['params'])
-    # print(params)
 
-    # Для начала, скачем датасет! Если оный уже был скачан,
-    # KaggleHub сам определит это и ничего перекачивать не будет.
-    path_dataset = Path(kagglehub.dataset_download(params["dataset-name"]))
+    path_dataset = (
+        Path(params['path-data']) / 'nitishabharathi/scene-classification/versions/1'
+    )
     path_images = path_dataset / 'train-scene classification' / 'train'
     path_csv = path_dataset / 'train-scene classification' / 'train.csv'
-    # print(path_dataset)
+
+    # Для начала, скачем датасет! УИИИИИИИИИ
+    if not check_dataset(params['dataset-size'], path_dataset):
+        print('Датасет отсутствует или повреждён, скачивание с DVC...')
+        download_dataset()
 
     # Считаем входные метки, чтобы не делать этого по многу раз
-    labels_f = open(params["path-labels"], 'r', encoding='utf-8')
+    labels_f = open(params['path-labels'], 'r', encoding='utf-8')
     labels_list = list(map(lambda x: x.replace('\n', ''), labels_f.readlines()))
     labels = {label_no: label_name for label_no, label_name in enumerate(labels_list)}
 
@@ -48,7 +55,7 @@ def run(cfg: DictConfig):
         [
             transforms.ToTensor(),
             transforms.Resize(
-                [params["ss"], params["ss"]]
+                [params['ss'], params['ss']]
             ),  # Ориг. разрешение: [150, 150]
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
@@ -56,17 +63,17 @@ def run(cfg: DictConfig):
 
     print(f'Подготовка к {params["mode"]} завершена, обработка...')
 
-    if params["mode"] == 'train':
+    if params['mode'] == 'train':
         # Обучаем с нуля модель и сохраняем чек-поинты
         try:
             [train_samples, eval_samples] = read_splits(
-                ['train', 'eval'], params["path-splits"]
+                ['train', 'eval'], params['path-data']
             )
         except Exception:
             print('Файл сплитов не найден! Создаю новые...')
-            create_splits(path_csv, params["dataset-splits"], params["path-splits"])
+            create_splits(path_csv, params['dataset-splits'], params['path-data'])
             [train_samples, eval_samples] = read_splits(
-                ['train', 'eval'], params["path-splits"]
+                ['train', 'eval'], params['path-splits']
             )
 
         model, best_acc, best_epoch = model_train(
@@ -75,15 +82,15 @@ def run(cfg: DictConfig):
             path_images,
             labels,
             transform_list,
-            params["e"],
-            params["bs"],
+            params['e'],
+            params['bs'],
         )
 
         model_name = model_name_format(
-            params["path-checkpoint"],
-            params["e"],
-            params["bs"],
-            params["ss"],
+            params['path-checkpoint'],
+            params['e'],
+            params['bs'],
+            params['ss'],
             best_epoch,
             best_acc,
         )
@@ -91,23 +98,23 @@ def run(cfg: DictConfig):
         torch.save(model, model_name)
         print('Обучение завершено!')
 
-    elif params["mode"] == 'test':
+    elif params['mode'] == 'test':
         # Загружаем модель и прогоняем на тестовых данных
         try:
-            [test_samples] = read_splits(['test'], params["path-splits"])
+            [test_samples] = read_splits(['test'], params['path-splits'])
         except Exception:
             print('Файл сплитов не найден! Создаю новые...')
-            create_splits(path_csv, params["dataset-splits"], params["path-splits"])
-            [test_samples] = read_splits(['test'], params["path-splits"])
+            create_splits(path_csv, params['dataset-splits'], params['path-splits'])
+            [test_samples] = read_splits(['test'], params['path-splits'])
 
-        model = torch.load(params["path-checkpoint"], weights_only=False)
+        model = torch.load(params['path-checkpoint'], weights_only=False)
 
         true, pred = model_test(
-            model, test_samples, path_images, transform_list, params["bs"]
+            model, test_samples, path_images, transform_list, params['bs']
         )
         show_metrics(true, pred, labels)
 
-    elif params["mode"] == 'visualize':
+    elif params['mode'] == 'visualize':
         # В случае с визуализацией, нас сплиты не интересуют
         samples = read_samples(path_csv)
 
@@ -115,11 +122,11 @@ def run(cfg: DictConfig):
 
     else:
         # В остальных случаях -- просто выполняем инференс
-        model = torch.load(params["path-checkpoint"], weights_only=False)
+        model = torch.load(params['path-checkpoint'], weights_only=False)
 
-        if Path(params["path-infers"]).is_dir():
+        if Path(params['path-infers']).is_dir():
             image_pathes = [
-                f for f in Path(params["path-infers"]).iterdir() if f.is_file()
+                f for f in Path(params['path-infers']).iterdir() if f.is_file()
             ]
 
             for image_path in image_pathes:
@@ -128,16 +135,16 @@ def run(cfg: DictConfig):
                     image_path,
                     labels_list,
                     transform_list,
-                    output='std',  # output='mpl'
+                    output=params['infer-output'],
                 )
 
-        elif Path(params["path-infers"]).is_file():
+        elif Path(params['path-infers']).is_file():
             inference(
                 model,
-                Path(params["path-infers"]),
+                Path(params['path-infers']),
                 labels_list,
                 transform_list,
-                output='std',
+                output=params['infer-output'],
             )
 
         else:

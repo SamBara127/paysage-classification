@@ -14,7 +14,6 @@ def read_samples(
 ) -> list[Sample]:
     df = pd.read_csv(str(path_to_data))
     samples = df.to_dict(orient='records')
-
     return samples  # type: ignore
 
 

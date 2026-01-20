@@ -3,7 +3,7 @@ from typing import Callable, Literal
 import matplotlib.pyplot as plt
 from PIL import Image
 
-from preprocess import process_image
+from .model.preprocess import process_image
 
 
 def inference(

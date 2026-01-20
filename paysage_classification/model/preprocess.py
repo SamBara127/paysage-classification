@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 
-from samples import Sample
+from ..dataset.samples import Sample
 
 
 def process_image(path_image: Path, transforms: Callable):

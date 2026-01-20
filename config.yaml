@@ -1,0 +1,12 @@
+params:
+  mode: inference # train, test, inference, visualiZe
+  e: 100
+  bs: 256
+  ss: 88
+  path-checkpoint: models/260120_100-256-32_10-0.8544.pt
+  path-data: data/
+  path-infers: pred/15576514498171.jpg
+  path-labels: data/labels.txt
+  dataset-size: 397098665
+  dataset-splits: 0.7-0.2-0.1 # суммарно д.б. = 1.0
+  infer-output: mpl # mpl (GUI) либо std (текст)

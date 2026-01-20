@@ -1,8 +1,12 @@
-**/__pycache__
+.dvc/* # Нет, я не буду пушить приватный ключ на гитхаб
 .mypy_cache/*
+**/__pycache__
 
-models/*.pt # Разрешаем файлы DVC
-data/*.csv # Разрешаем файлы DVC и labels.txt
+models/*
+data/*
+!data/*.dvc
+!data/labels.txt # Стандартные лейблы
+outputs/*
 pred/*
 runs/*
 !runs/.gitkeep # Т.к. ненастраиваемый каталог
