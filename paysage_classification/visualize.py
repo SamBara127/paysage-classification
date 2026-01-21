@@ -1,12 +1,14 @@
 from collections import Counter
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from sklearn.decomposition import PCA
 
 from .dataset.samples import Sample
 from .model.preprocess import SceneDataset
+
+matplotlib.use("TkAgg")
 
 
 # Перед использованием задать ss не больше 64, иначе крашнется!
@@ -36,6 +38,8 @@ def visualize(
 
     pca = PCA(n_components=2)
     X_2d = pca.fit_transform(images)
+
+    import matplotlib.pyplot as plt
 
     # Выбираем палитру под кол-во классов
     colors = plt.cm.tab10(np.linspace(0, 1, len(labels_list)))

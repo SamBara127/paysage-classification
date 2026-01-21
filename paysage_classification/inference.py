@@ -1,9 +1,10 @@
 from typing import Callable, Literal
 
-import matplotlib.pyplot as plt
-from PIL import Image
+import matplotlib
 
 from .model.preprocess import process_image
+
+matplotlib.use("TkAgg")
 
 
 def inference(
@@ -29,6 +30,9 @@ def inference(
 
     # Вывод в виде интерактивного окна MatPlotLib, для демки
     else:
+        import matplotlib.pyplot as plt  # локальный импорт
+        from PIL import Image
+
         with Image.open(path_image) as img:
             img_rgb = img.convert('RGB')  # На всякий случай
 

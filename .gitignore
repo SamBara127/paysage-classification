@@ -11,4 +11,6 @@ data/*
 outputs/*
 pred/*
 runs/*
+dist/*
+test_predict/*
 !runs/.gitkeep # Т.к. ненастраиваемый каталог
