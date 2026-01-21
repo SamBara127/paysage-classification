@@ -18,6 +18,16 @@ from paysage_classification.visualize import visualize
 log = logging.getLogger(__name__)
 
 
+def check_models_dir(model_path):
+    models_path = Path(model_path)
+    models_path.mkdir(parents=True, exist_ok=True)
+
+    if models_path.is_dir():
+        print(f"Папка '{models_path}' готова к работе.")
+    else:
+        print(f"Что-то пошло не так при создании '{models_path}'.")
+
+
 def model_name_format(path_checkpoint, e, bs, ss, best_epoch, best_acc) -> str:
     model_date = datetime.now().strftime('%y%m%d')
     return (
@@ -92,13 +102,15 @@ def run(cfg: DictConfig):
         )
 
         model_name = model_name_format(
-            params['path-checkpoint'],
+            params['path-models'],
             params['e'],
             params['bs'],
             params['ss'],
             best_epoch,
             best_acc,
         )
+
+        check_models_dir(params['path-models'])
 
         torch.save(model, model_name)
         print('Обучение завершено!')
@@ -112,7 +124,9 @@ def run(cfg: DictConfig):
             create_splits(path_csv, params['dataset-splits'], params['path-data'])
             [test_samples] = read_splits(['test'], params['path-data'])
 
-        model = torch.load(params['path-checkpoint'], weights_only=False)
+        model = torch.load(
+            Path(params['path-models']) / params['path-checkpoint'], weights_only=False
+        )
 
         true, pred = model_test(
             model, test_samples, path_images, transform_list, params['bs']
@@ -126,7 +140,9 @@ def run(cfg: DictConfig):
 
     elif params['mode'] == 'inference':
         # В остальных случаях -- просто выполняем инференс
-        model = torch.load(params['path-checkpoint'], weights_only=False)
+        model = torch.load(
+            Path(params['path-models']) / params['path-checkpoint'], weights_only=False
+        )
 
         if Path(params['path-infers']).is_dir():
             image_pathes = [
