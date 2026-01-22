@@ -10,4 +10,4 @@ params:
   path-labels: data/labels.txt
   dataset-size: 397098665
   dataset-splits: 0.7-0.2-0.1 # суммарно д.б. = 1.0
-  infer-output: mpl # mpl (GUI) либо std (текст)
+  infer-output: std # mpl (GUI) либо std (текст)

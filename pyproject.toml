@@ -31,6 +31,7 @@ omegaconf = "^2.3.0"
 dvc = "^3.66.1"
 tensorboard = "^2.20.0"
 tk = "^0.1.0"
+mlflow = "^3.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"
